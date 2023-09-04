@@ -1,30 +1,44 @@
-import { useState } from "react";
-import { Inter } from "next/font/google";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
-const inter = Inter({ subsets: ["latin"] });
-
-export default function Home() {
+const Edit = () => {
   const [todo, setTodo] = useState({ title: "", description: "" });
+  const router = useRouter();
+  const { title } = router.query;
 
-  const addTodo = () => {
+  const onChange = (e) => {
+    setTodo({ ...todo, [e.target.name]: e.target.value });
+  };
+
+  useEffect(() => {
     let todos = localStorage.getItem("todos");
     if (todos) {
       let todosJson = JSON.parse(todos);
-      if (todosJson.find((item) => item.title == todo.title)) {
-        alert("This Todo already exists!!");
-      } else {
-        todosJson.push(todo);
+      let currentTodo = todosJson.filter((e) => e.title == title);
+      if (currentTodo.length > 0) {
+        setTodo(currentTodo[0]);
+      }
+    }
+  }, [router.isReady]);
+
+  const updateTodo = () => {
+    let todos = localStorage.getItem("todos");
+    if (todos) {
+      let todosJson = JSON.parse(todos);
+      if (todosJson.find((item) => item.title == title)) {
+        let index = todosJson.findIndex((item) => item.title == title);
+        todosJson[index].title = todo.title;
+        todosJson[index].description = todo.description;
         localStorage.setItem("todos", JSON.stringify(todosJson));
-        alert("Todo has been added to the list...");
+        alert("Todo has been updated");
         setTodo({ title: "", description: "" });
+        router.push("/todos");
+      } else {
+        alert("Todo does not exist");
       }
     } else {
       localStorage.setItem("todos", JSON.stringify([todo]));
     }
-  };
-
-  const onChange = (e) => {
-    setTodo({ ...todo, [e.target.name]: e.target.value });
   };
 
   return (
@@ -33,7 +47,7 @@ export default function Home() {
         <div className="container px-5 py-24 mx-auto flex flex-wrap items-center">
           <div className="bg-gray-100 rounded-lg p-8 flex flex-col md:ml-auto w-full mt-10 md:mt-0">
             <h2 className="text-gray-900 text-lg font-medium title-font mb-5">
-              Add a Todo
+              Update a Todo
             </h2>
             <div className="relative mb-4">
               <label
@@ -66,13 +80,15 @@ export default function Home() {
               />
             </div>
             <button
-              onClick={addTodo}
+              onClick={updateTodo}
               className="text-white bg-indigo-500 border-0 w-fit py-2 px-8 focus:outline-none hover:bg-indigo-600 rounded text-lg">
-              Add Todo
+              Update Todo
             </button>
           </div>
         </div>
       </section>
     </div>
   );
-}
+};
+
+export default Edit;
